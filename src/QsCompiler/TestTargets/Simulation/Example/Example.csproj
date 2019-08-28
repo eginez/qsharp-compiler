@@ -3,11 +3,28 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
+    <ExecutionTarget>QuantumSimulator</ExecutionTarget>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Quantum.Standard" Version="0.8.1907.1701" />
-  </ItemGroup>
+  
+  <Choose>
+    <When Condition="'$(ExecutionTarget)' == 'QuantumSimulator'">
+      <ItemGroup>
+        <PackageReference Include="Microsoft.Quantum.Standard" Version="0.8.1907.1701" />
+        <Compile Remove="Driver.cs" />
+        <Compile Include="Driver.cs">
+          <Visible>false</Visible>
+        </Compile>
+      </ItemGroup>
+      <PropertyGroup>
+        <ExecutionTargetResolved>true</ExecutionTargetResolved>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Compile Remove="Driver.cs" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>  
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\CommandLineTool\QsCommandLineTool.csproj">
@@ -26,12 +43,7 @@
 
   <ItemGroup>
     <Folder Include="$(GenFilesDir)" />
-    <Compile Remove="Driver.cs" />
-    <Compile Include="Driver.cs">
-      <Visible>false</Visible>
-    </Compile>
   </ItemGroup>
-
 
   <Target Name="QsharpClean" BeforeTargets="Clean">
     <ItemGroup>
@@ -41,6 +53,13 @@
   </Target>  
   
   <Target Name="QsharpCompile" Condition="'$(DesignTimeBuild)' != 'true'" DependsOnTargets="ResolveAssemblyReferences;QsharpClean" BeforeTargets="CoreCompile">
+    <Error
+        Text="No execution target specified. Please set the ExecutionTarget property in the project file."
+        Condition="'$(ExecutionTarget)' == ''"/>
+    <Error
+        Text="Unknown execution target $(ExecutionTarget)."
+        Condition="'$(ExecutionTarget)' != '' And $(ExecutionTargetResolved) != 'true'"/>
+
     <MakeDir Directories="$(GenFilesDir)" />
     <ItemGroup>
       <QsReferences Include="@(ReferencePath)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch(%(FullPath), '(?i)system.|mscorlib|netstandard.library|microsoft.netcore.app')) == false" />
