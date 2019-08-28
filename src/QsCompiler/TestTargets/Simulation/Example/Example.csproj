@@ -5,25 +5,37 @@
     <PlatformTarget>x64</PlatformTarget>
     <ExecutionTarget>QuantumSimulator</ExecutionTarget>
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Quantum.Standard" Version="0.8.1907.1701" />  
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="QuantumSimulatorExecution.cs" />
+    <Compile Remove="TraceSimulatorExecution.cs" />
+  </ItemGroup>
+
   <Choose>
     <When Condition="'$(ExecutionTarget)' == 'QuantumSimulator'">
       <ItemGroup>
-        <PackageReference Include="Microsoft.Quantum.Standard" Version="0.8.1907.1701" />
-        <Compile Remove="Driver.cs" />
-        <Compile Include="Driver.cs">
+        <Compile Include="QuantumSimulatorExecution.cs">
           <Visible>false</Visible>
         </Compile>
       </ItemGroup>
       <PropertyGroup>
-        <ExecutionTargetResolved>true</ExecutionTargetResolved>
+        <ResolvedExecutionTarget>QuantumSimulator</ResolvedExecutionTarget>
       </PropertyGroup>
     </When>
-    <Otherwise>
+    <When Condition="'$(ExecutionTarget)' == 'TraceSimulator'">
       <ItemGroup>
-        <Compile Remove="Driver.cs" />
+        <Compile Include="TraceSimulatorExecution.cs">
+          <Visible>false</Visible>
+        </Compile>
       </ItemGroup>
-    </Otherwise>
+      <PropertyGroup>
+        <ResolvedExecutionTarget>TraceSimulator</ResolvedExecutionTarget>
+      </PropertyGroup>
+    </When>
   </Choose>  
 
   <ItemGroup>
@@ -57,8 +69,8 @@
         Text="No execution target specified. Please set the ExecutionTarget property in the project file."
         Condition="'$(ExecutionTarget)' == ''"/>
     <Error
-        Text="Unknown execution target $(ExecutionTarget)."
-        Condition="'$(ExecutionTarget)' != '' And $(ExecutionTargetResolved) != 'true'"/>
+        Text="Unknown execution target '$(ExecutionTarget)'."
+        Condition="'$(ExecutionTarget)' != '' And $(ResolvedExecutionTarget) == ''"/>
 
     <MakeDir Directories="$(GenFilesDir)" />
     <ItemGroup>
